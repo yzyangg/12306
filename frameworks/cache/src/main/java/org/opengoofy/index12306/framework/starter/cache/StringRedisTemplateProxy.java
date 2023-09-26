@@ -50,19 +50,36 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class StringRedisTemplateProxy implements DistributedCache {
 
+    /**
+     * StringRedisTemplate
+     */
     private final StringRedisTemplate stringRedisTemplate;
+    /**
+     * Redis 配置属性
+     */
     private final RedisDistributedProperties redisProperties;
+    /**
+     * Redisson 客户端
+     */
     private final RedissonClient redissonClient;
 
+    /**
+     * lua 脚本路径
+     */
     private static final String LUA_PUT_IF_ALL_ABSENT_SCRIPT_PATH = "lua/putIfAllAbsent.lua";
+    /**
+     * 获取分布式锁 key 前缀
+     */
     private static final String SAFE_GET_DISTRIBUTED_LOCK_KEY_PREFIX = "safe_get_distributed_lock_get:";
 
     @Override
     public <T> T get(String key, Class<T> clazz) {
         String value = stringRedisTemplate.opsForValue().get(key);
+        // clazz 是否继承与 String
         if (String.class.isAssignableFrom(clazz)) {
             return (T) value;
         }
+        // 根据clazz类型 构建出json对象
         return JSON.parseObject(value, FastJson2Util.buildType(clazz));
     }
 
@@ -71,6 +88,12 @@ public class StringRedisTemplateProxy implements DistributedCache {
         put(key, value, redisProperties.getValueTimeout());
     }
 
+    /**
+     * 批量添加缓存
+     *
+     * @param keys
+     * @return
+     */
     @Override
     public Boolean putIfAllAbsent(@NotNull Collection<String> keys) {
         DefaultRedisScript<Boolean> actual = Singleton.get(LUA_PUT_IF_ALL_ABSENT_SCRIPT_PATH, () -> {
@@ -79,20 +102,45 @@ public class StringRedisTemplateProxy implements DistributedCache {
             redisScript.setResultType(Boolean.class);
             return redisScript;
         });
-        Boolean result = stringRedisTemplate.execute(actual, Lists.newArrayList(keys), redisProperties.getValueTimeout().toString());
+        Boolean result = null;
+        if (actual != null) {
+            result = stringRedisTemplate.execute(actual, Lists.newArrayList(keys), redisProperties.getValueTimeout().toString());
+        }
         return result != null && result;
     }
 
+    /**
+     * 删除缓存
+     *
+     * @param key
+     * @return
+     */
     @Override
     public Boolean delete(String key) {
         return stringRedisTemplate.delete(key);
     }
 
+    /**
+     * 批量删除缓存
+     *
+     * @param keys
+     * @return
+     */
     @Override
     public Long delete(Collection<String> keys) {
         return stringRedisTemplate.delete(keys);
     }
 
+    /**
+     * 获取缓存
+     *
+     * @param key         缓存key
+     * @param clazz       缓存类型
+     * @param cacheLoader 缓存加载器
+     * @param timeout     缓存超时时间
+     * @param <T>         缓存类型
+     * @return 缓存结果
+     */
     @Override
     public <T> T get(@NotBlank String key, Class<T> clazz, CacheLoader<T> cacheLoader, long timeout) {
         return get(key, clazz, cacheLoader, timeout, redisProperties.getValueTimeUnit());
@@ -107,6 +155,15 @@ public class StringRedisTemplateProxy implements DistributedCache {
         return loadAndSet(key, cacheLoader, timeout, timeUnit, false, null);
     }
 
+    /**
+     * 安全获取缓存
+     * @param key
+     * @param clazz
+     * @param cacheLoader
+     * @param timeout
+     * @return
+     * @param <T>
+     */
     @Override
     public <T> T safeGet(@NotBlank String key, Class<T> clazz, CacheLoader<T> cacheLoader, long timeout) {
         return safeGet(key, clazz, cacheLoader, timeout, redisProperties.getValueTimeUnit());
@@ -144,8 +201,13 @@ public class StringRedisTemplateProxy implements DistributedCache {
     }
 
     @Override
-    public <T> T safeGet(String key, Class<T> clazz, CacheLoader<T> cacheLoader, long timeout, TimeUnit timeUnit,
-                         RBloomFilter<String> bloomFilter, CacheGetFilter<String> cacheGetFilter, CacheGetIfAbsent<String> cacheGetIfAbsent) {
+    public <T> T safeGet(String key,
+                         Class<T> clazz,
+                         CacheLoader<T> cacheLoader,
+                         long timeout, TimeUnit timeUnit,
+                         RBloomFilter<String> bloomFilter,
+                         CacheGetFilter<String> cacheGetFilter,
+                         CacheGetIfAbsent<String> cacheGetIfAbsent) {
         T result = get(key, clazz);
         // 缓存结果不等于空或空字符串直接返回；通过函数判断是否返回空，为了适配布隆过滤器无法删除的场景；两者都不成立，判断布隆过滤器是否存在，不存在返回空
         if (!CacheUtil.isNullOrBlank(result)

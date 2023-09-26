@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 /**
- * 订单 ID 全局唯一生成器管理
+ * 分布式 订单 ID 全局唯一生成器管理
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */

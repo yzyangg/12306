@@ -26,6 +26,8 @@ import java.util.Map;
 
 /**
  * Application context holder.
+ * 基于以上诉求，我们依赖 Spring 提供的 ApplicationContextAware
+ * 来将 Spring IOC 容器的对象放到一个自定义容器中，并持有 Spring IOC 容器。
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
@@ -33,6 +35,11 @@ public class ApplicationContextHolder implements ApplicationContextAware {
 
     private static ApplicationContext CONTEXT;
 
+    /**
+     * 当 Spring 容器初始化时，会调用实现了这个接口的类的 setApplicationContext 方法，
+     * 并将应用程序上下文传递给它。
+     * 在这个类中，通过 setApplicationContext 方法将应用程序上下文赋值给了 CONTEXT 静态成员变量
+     */
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         ApplicationContextHolder.CONTEXT = applicationContext;

@@ -17,11 +17,7 @@
 
 package org.opengoofy.index12306.frameworks.starter.user.core;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.opengoofy.index12306.framework.starter.bases.constant.UserConstant;
 import org.springframework.util.StringUtils;
@@ -40,29 +36,45 @@ public class UserTransmitFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        // 获取用户信息
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String userId = httpServletRequest.getHeader(UserConstant.USER_ID_KEY);
+
+
         if (StringUtils.hasText(userId)) {
+            // userName
             String userName = httpServletRequest.getHeader(UserConstant.USER_NAME_KEY);
+            // realName
             String realName = httpServletRequest.getHeader(UserConstant.REAL_NAME_KEY);
+
+            // URL 解码
             if (StringUtils.hasText(userName)) {
                 userName = URLDecoder.decode(userName, UTF_8);
             }
             if (StringUtils.hasText(realName)) {
                 realName = URLDecoder.decode(realName, UTF_8);
             }
+
+            // 获取 token
             String token = httpServletRequest.getHeader(UserConstant.USER_TOKEN_KEY);
+
+
+            // 构建用户信息
             UserInfoDTO userInfoDTO = UserInfoDTO.builder()
                     .userId(userId)
                     .username(userName)
                     .realName(realName)
                     .token(token)
                     .build();
+
+            // 传递用户信息
             UserContext.setUser(userInfoDTO);
         }
         try {
+            // 执行过滤器
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
+            // 执行完后清空用户信息
             UserContext.removeUser();
         }
     }

@@ -20,9 +20,11 @@ package org.opengoofy.index12306.biz.aggregationservice;
 import cn.crane4j.spring.boot.annotation.EnableCrane4j;
 import cn.hippo4j.core.enable.EnableDynamicThreadPool;
 import org.mybatis.spring.annotation.MapperScan;
+import org.opengoofy.index12306.framework.starter.cache.config.RedisDistributedProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.retry.annotation.EnableRetry;
 
 /**
@@ -49,6 +51,10 @@ import org.springframework.retry.annotation.EnableRetry;
 public class AggregationServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AggregationServiceApplication.class, args);
+        ConfigurableApplicationContext context = SpringApplication.run(AggregationServiceApplication.class, args);
+        RedisDistributedProperties redisDistributedProperties = context.getBean(RedisDistributedProperties.class);
+        String prefix = redisDistributedProperties.getPrefixCharset();
+        System.out.println(prefix);
+
     }
 }

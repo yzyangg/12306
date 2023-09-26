@@ -26,7 +26,7 @@ package org.opengoofy.index12306.framework.starter.cache.core;
 public interface CacheLoader<T> {
 
     /**
-     * 加载缓存
+     * 从数据库中加载缓存 select
      */
     T load();
 }

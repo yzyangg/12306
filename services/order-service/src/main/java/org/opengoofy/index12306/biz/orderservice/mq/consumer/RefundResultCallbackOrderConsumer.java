@@ -69,16 +69,23 @@ public class RefundResultCallbackOrderConsumer implements RocketMQListener<Messa
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void onMessage(MessageWrapper<RefundResultCallbackOrderEvent> message) {
+
         RefundResultCallbackOrderEvent refundResultCallbackOrderEvent = message.getMessage();
+
         String orderSn = refundResultCallbackOrderEvent.getOrderSn();
+
         List<OrderItemDO> orderItemDOList = new ArrayList<>();
+
         OrderItemStatusReversalDTO orderItemStatusReversalDTO = null;
+
         List<TicketOrderPassengerDetailRespDTO> partialRefundTicketDetailList = refundResultCallbackOrderEvent.getPartialRefundTicketDetailList();
+
         partialRefundTicketDetailList.forEach(partial -> {
             OrderItemDO orderItemDO = new OrderItemDO();
             BeanUtil.convert(partial, orderItemDO);
             orderItemDOList.add(orderItemDO);
         });
+
         if (refundResultCallbackOrderEvent.getType() == OrderStatusEnum.PARTIAL_REFUND.getStatus()) {
             orderItemStatusReversalDTO = OrderItemStatusReversalDTO.builder()
                     .orderSn(orderSn)

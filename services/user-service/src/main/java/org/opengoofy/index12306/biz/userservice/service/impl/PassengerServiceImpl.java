@@ -77,6 +77,11 @@ public class PassengerServiceImpl implements PassengerService {
                 .orElse(null);
     }
 
+    /**
+     * 获取实际的用户乘车人列表字符串
+     * @param username 用户名
+     * @return
+     */
     private String getActualUserPassengerListStr(String username) {
         return  distributedCache.safeGet(
                 USER_PASSENGER_LIST + username,

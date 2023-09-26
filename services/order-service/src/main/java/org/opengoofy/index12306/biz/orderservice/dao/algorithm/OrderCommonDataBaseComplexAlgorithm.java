@@ -47,14 +47,20 @@ public class OrderCommonDataBaseComplexAlgorithm implements ComplexKeysShardingA
 
     @Override
     public Collection<String> doSharding(Collection availableTargetNames, ComplexKeysShardingValue shardingValue) {
+        // 从传入的 shardingValue 中获取列名和分片值的映射
         Map<String, Collection<Comparable<Long>>> columnNameAndShardingValuesMap = shardingValue.getColumnNameAndShardingValuesMap();
         Collection<String> result = new LinkedHashSet<>(availableTargetNames.size());
+
+        // 如果传入的 shardingValue 不为空
         if (CollUtil.isNotEmpty(columnNameAndShardingValuesMap)) {
             String userId = "user_id";
+            // 获取 user_id 列的分片值
             Collection<Comparable<Long>> customerUserIdCollection = columnNameAndShardingValuesMap.get(userId);
             if (CollUtil.isNotEmpty(customerUserIdCollection)) {
                 String dbSuffix;
                 Comparable<?> comparable = customerUserIdCollection.stream().findFirst().get();
+
+                // 计算分片值的 hash 值
                 if (comparable instanceof String) {
                     String actualUserId = comparable.toString();
                     dbSuffix = String.valueOf(hashShardingValue(actualUserId.substring(Math.max(actualUserId.length() - 6, 0))) % shardingCount / tableShardingCount);
@@ -79,6 +85,10 @@ public class OrderCommonDataBaseComplexAlgorithm implements ComplexKeysShardingA
         return result;
     }
 
+    /**
+     * 初始化分片算法
+     * @param props
+     */
     @Override
     public void init(Properties props) {
         this.props = props;
@@ -86,20 +96,40 @@ public class OrderCommonDataBaseComplexAlgorithm implements ComplexKeysShardingA
         tableShardingCount = getTableShardingCount(props);
     }
 
+    /**
+     * 获取分片数
+     * @param props
+     * @return
+     */
     private int getShardingCount(final Properties props) {
         ShardingSpherePreconditions.checkState(props.containsKey(SHARDING_COUNT_KEY), () -> new ShardingAlgorithmInitializationException(getType(), "Sharding count cannot be null."));
         return Integer.parseInt(props.getProperty(SHARDING_COUNT_KEY));
     }
 
+
+    /**
+     * 获取表分片数
+     * @param props
+     * @return
+     */
     private int getTableShardingCount(final Properties props) {
         ShardingSpherePreconditions.checkState(props.containsKey(TABLE_SHARDING_COUNT_KEY), () -> new ShardingAlgorithmInitializationException(getType(), "Table sharding count cannot be null."));
         return Integer.parseInt(props.getProperty(TABLE_SHARDING_COUNT_KEY));
     }
 
+    /**
+     * 计算分片值的 hash 值
+     * @param shardingValue
+     * @return
+     */
     private long hashShardingValue(final Comparable<?> shardingValue) {
         return Math.abs((long) shardingValue.hashCode());
     }
 
+    /**
+     * 获取分片算法类型
+     * @return
+     */
     @Override
     public String getType() {
         return "CLASS_BASED";

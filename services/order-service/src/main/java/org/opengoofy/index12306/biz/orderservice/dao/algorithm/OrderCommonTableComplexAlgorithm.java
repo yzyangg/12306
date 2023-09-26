@@ -45,6 +45,7 @@ public class OrderCommonTableComplexAlgorithm implements ComplexKeysShardingAlgo
     @Override
     public Collection<String> doSharding(Collection availableTargetNames, ComplexKeysShardingValue shardingValue) {
         Map<String, Collection<Comparable<?>>> columnNameAndShardingValuesMap = shardingValue.getColumnNameAndShardingValuesMap();
+        // 从传入的 shardingValue 中获取列名和分片值的映射
         Collection<String> result = new LinkedHashSet<>(availableTargetNames.size());
         if (CollUtil.isNotEmpty(columnNameAndShardingValuesMap)) {
             String userId = "user_id";

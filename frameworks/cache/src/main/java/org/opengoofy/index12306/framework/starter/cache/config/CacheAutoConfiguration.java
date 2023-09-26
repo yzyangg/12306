@@ -43,19 +43,32 @@ public class CacheAutoConfiguration {
      */
     @Bean
     public RedisKeySerializer redisKeySerializer() {
+        // 获取自动配置后的redisDistributedProperties的prefix
         String prefix = redisDistributedProperties.getPrefix();
+        // 获取自动配置后的redisDistributedProperties的prefixCharset
         String prefixCharset = redisDistributedProperties.getPrefixCharset();
         return new RedisKeySerializer(prefix, prefixCharset);
     }
 
     /**
      * 防止缓存穿透的布隆过滤器
+     * 只有在配置文件中配置了 framework.cache.redis.bloom-filter.default.enabled=true 时才会生效
      */
     @Bean
     @ConditionalOnProperty(prefix = BloomFilterPenetrateProperties.PREFIX, name = "enabled", havingValue = "true")
-    public RBloomFilter<String> cachePenetrationBloomFilter(RedissonClient redissonClient, BloomFilterPenetrateProperties bloomFilterPenetrateProperties) {
-        RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter(bloomFilterPenetrateProperties.getName());
-        cachePenetrationBloomFilter.tryInit(bloomFilterPenetrateProperties.getExpectedInsertions(), bloomFilterPenetrateProperties.getFalseProbability());
+    public RBloomFilter<String> cachePenetrationBloomFilter(RedissonClient redissonClient,
+                                                            BloomFilterPenetrateProperties bloomFilterPenetrateProperties) {
+
+
+        // 获取自动配置后的bloomFilterPenetrateProperties的name
+        RBloomFilter<String> cachePenetrationBloomFilter =
+                redissonClient.getBloomFilter(bloomFilterPenetrateProperties.getName());
+
+        // 获取自动配置后的bloomFilterPenetrateProperties的expectedInsertions和falseProbability
+        cachePenetrationBloomFilter.
+                tryInit(bloomFilterPenetrateProperties.getExpectedInsertions(),
+                        bloomFilterPenetrateProperties.getFalseProbability());
+
         return cachePenetrationBloomFilter;
     }
 
@@ -65,6 +78,8 @@ public class CacheAutoConfiguration {
                                                              StringRedisTemplate stringRedisTemplate,
                                                              RedissonClient redissonClient) {
         stringRedisTemplate.setKeySerializer(redisKeySerializer);
+
+        // 代理模式: Redis 客户端代理类增强
         return new StringRedisTemplateProxy(stringRedisTemplate, redisDistributedProperties, redissonClient);
     }
 }

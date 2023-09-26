@@ -42,6 +42,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PayCallbackController {
 
+    public static final String OUT_TRADE_NO = "out_trade_no";
+    public static final String GMT_PAYMENT = "gmt_payment";
     private final AbstractStrategyChoose abstractStrategyChoose;
 
     /**
@@ -52,8 +54,8 @@ public class PayCallbackController {
     public void callbackAlipay(@RequestParam Map<String, Object> requestParam) {
         PayCallbackCommand payCallbackCommand = BeanUtil.mapToBean(requestParam, PayCallbackCommand.class, true, CopyOptions.create());
         payCallbackCommand.setChannel(PayChannelEnum.ALI_PAY.getCode());
-        payCallbackCommand.setOrderRequestId(requestParam.get("out_trade_no").toString());
-        payCallbackCommand.setGmtPayment(DateUtil.parse(requestParam.get("gmt_payment").toString()));
+        payCallbackCommand.setOrderRequestId(requestParam.get(OUT_TRADE_NO).toString());
+        payCallbackCommand.setGmtPayment(DateUtil.parse(requestParam.get(GMT_PAYMENT).toString()));
         PayCallbackRequest payCallbackRequest = PayCallbackRequestConvert.command2PayCallbackRequest(payCallbackCommand);
         /**
          * {@link AliPayCallbackHandler}

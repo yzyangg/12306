@@ -90,6 +90,7 @@ public class PassengerController {
             scene = IdempotentSceneEnum.RESTAPI,
             message = "正在修改乘车人，请稍后再试..."
     )
+
     @PostMapping("/api/user-service/passenger/update")
     public Result<Void> updatePassenger(@RequestBody PassengerReqDTO requestParam) {
         passengerService.updatePassenger(requestParam);

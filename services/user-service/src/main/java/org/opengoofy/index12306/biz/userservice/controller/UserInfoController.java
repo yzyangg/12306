@@ -29,11 +29,7 @@ import org.opengoofy.index12306.biz.userservice.service.UserLoginService;
 import org.opengoofy.index12306.biz.userservice.service.UserService;
 import org.opengoofy.index12306.framework.starter.convention.result.Result;
 import org.opengoofy.index12306.framework.starter.web.Results;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户控制层
@@ -44,7 +40,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserInfoController {
 
+    /**
+     * 用户登录服务
+     */
     private final UserLoginService userLoginService;
+    /**
+     * 用户服务
+     */
     private final UserService userService;
 
     /**

@@ -22,11 +22,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.Ordered;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +32,9 @@ import java.util.stream.Collectors;
  */
 public final class AbstractChainContext<T> implements CommandLineRunner {
 
+    /**
+     * mark -> AbstractChainHandler
+     */
     private final Map<String, List<AbstractChainHandler>> abstractChainHandlerContainer = new HashMap<>();
 
     /**
@@ -52,6 +51,12 @@ public final class AbstractChainContext<T> implements CommandLineRunner {
         abstractChainHandlers.forEach(each -> each.handler(requestParam));
     }
 
+    /**
+     * 容器初始化时执行
+     *
+     * @param args
+     * @throws Exception
+     */
     @Override
     public void run(String... args) throws Exception {
         Map<String, AbstractChainHandler> chainFilterMap = ApplicationContextHolder

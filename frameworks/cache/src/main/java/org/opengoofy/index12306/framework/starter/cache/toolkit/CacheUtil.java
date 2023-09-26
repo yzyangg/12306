@@ -33,7 +33,7 @@ public final class CacheUtil {
     private static final String SPLICING_OPERATOR = "_";
 
     /**
-     * 构建缓存标识
+     * 构建缓存标识(_分隔符)
      *
      * @param keys
      * @return

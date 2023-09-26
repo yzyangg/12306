@@ -25,7 +25,7 @@ import org.springframework.context.ApplicationListener;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 应用初始化后置处理器，防止Spring事件被多次执行
+ * 应用初始化后置处理器，防止Spring事件被多次执行 TODO 不知道干嘛的
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */

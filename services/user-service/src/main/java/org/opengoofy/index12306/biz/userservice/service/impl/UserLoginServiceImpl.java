@@ -24,16 +24,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opengoofy.index12306.biz.userservice.common.enums.UserChainMarkEnum;
-import org.opengoofy.index12306.biz.userservice.dao.entity.UserDO;
-import org.opengoofy.index12306.biz.userservice.dao.entity.UserDeletionDO;
-import org.opengoofy.index12306.biz.userservice.dao.entity.UserMailDO;
-import org.opengoofy.index12306.biz.userservice.dao.entity.UserPhoneDO;
-import org.opengoofy.index12306.biz.userservice.dao.entity.UserReuseDO;
-import org.opengoofy.index12306.biz.userservice.dao.mapper.UserDeletionMapper;
-import org.opengoofy.index12306.biz.userservice.dao.mapper.UserMailMapper;
-import org.opengoofy.index12306.biz.userservice.dao.mapper.UserMapper;
-import org.opengoofy.index12306.biz.userservice.dao.mapper.UserPhoneMapper;
-import org.opengoofy.index12306.biz.userservice.dao.mapper.UserReuseMapper;
+import org.opengoofy.index12306.biz.userservice.dao.entity.*;
+import org.opengoofy.index12306.biz.userservice.dao.mapper.*;
 import org.opengoofy.index12306.biz.userservice.dto.req.UserDeletionReqDTO;
 import org.opengoofy.index12306.biz.userservice.dto.req.UserLoginReqDTO;
 import org.opengoofy.index12306.biz.userservice.dto.req.UserRegisterReqDTO;
@@ -62,13 +54,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static org.opengoofy.index12306.biz.userservice.common.constant.RedisKeyConstant.LOCK_USER_REGISTER;
-import static org.opengoofy.index12306.biz.userservice.common.constant.RedisKeyConstant.USER_DELETION;
-import static org.opengoofy.index12306.biz.userservice.common.constant.RedisKeyConstant.USER_REGISTER_REUSE_SHARDING;
-import static org.opengoofy.index12306.biz.userservice.common.enums.UserRegisterErrorCodeEnum.HAS_USERNAME_NOTNULL;
-import static org.opengoofy.index12306.biz.userservice.common.enums.UserRegisterErrorCodeEnum.MAIL_REGISTERED;
-import static org.opengoofy.index12306.biz.userservice.common.enums.UserRegisterErrorCodeEnum.PHONE_REGISTERED;
-import static org.opengoofy.index12306.biz.userservice.common.enums.UserRegisterErrorCodeEnum.USER_REGISTER_FAIL;
+import static org.opengoofy.index12306.biz.userservice.common.constant.RedisKeyConstant.*;
+import static org.opengoofy.index12306.biz.userservice.common.enums.UserRegisterErrorCodeEnum.*;
 import static org.opengoofy.index12306.biz.userservice.toolkit.UserReuseUtil.hashShardingIdx;
 
 /**
@@ -159,10 +146,18 @@ public class UserLoginServiceImpl implements UserLoginService {
         return true;
     }
 
+    /**
+     * 用户注册
+     * @param requestParam 用户注册入参
+     * @return 用户注册返回结果
+     */
     @Transactional(rollbackFor = Exception.class)
     @Override
     public UserRegisterRespDTO register(UserRegisterReqDTO requestParam) {
+        // 链式调用，处理参数
         abstractChainContext.handler(UserChainMarkEnum.USER_REGISTER_FILTER.name(), requestParam);
+
+        // redisson 分布式锁
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER + requestParam.getUsername());
         boolean tryLock = lock.tryLock();
         if (!tryLock) {
@@ -170,6 +165,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         }
         try {
             try {
+                // 注册
                 int inserted = userMapper.insert(BeanUtil.convert(requestParam, UserDO.class));
                 if (inserted < 1) {
                     throw new ServiceException(USER_REGISTER_FAIL);
@@ -178,11 +174,13 @@ public class UserLoginServiceImpl implements UserLoginService {
                 log.error("用户名 [{}] 重复注册", requestParam.getUsername());
                 throw new ServiceException(HAS_USERNAME_NOTNULL);
             }
+
             UserPhoneDO userPhoneDO = UserPhoneDO.builder()
                     .phone(requestParam.getPhone())
                     .username(requestParam.getUsername())
                     .build();
             try {
+                // 注册手机号
                 userPhoneMapper.insert(userPhoneDO);
             } catch (DuplicateKeyException dke) {
                 log.error("用户 [{}] 注册手机号 [{}] 重复", requestParam.getUsername(), requestParam.getPhone());
@@ -194,6 +192,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                         .username(requestParam.getUsername())
                         .build();
                 try {
+                    // 注册邮箱
                     userMailMapper.insert(userMailDO);
                 } catch (DuplicateKeyException dke) {
                     log.error("用户 [{}] 注册邮箱 [{}] 重复", requestParam.getUsername(), requestParam.getMail());
@@ -201,8 +200,10 @@ public class UserLoginServiceImpl implements UserLoginService {
                 }
             }
             String username = requestParam.getUsername();
+            // 删除注销表中的用户
             userReuseMapper.delete(Wrappers.update(new UserReuseDO(username)));
             StringRedisTemplate instance = (StringRedisTemplate) distributedCache.getInstance();
+            // 删除redis set中的注销用户
             instance.opsForSet().remove(USER_REGISTER_REUSE_SHARDING + hashShardingIdx(username), username);
             // 布隆过滤器设计问题：设置多大、碰撞率以及初始容量不够了怎么办？详情查看：https://t.zsxq.com/12DkAyTFS
             userRegisterCachePenetrationBloomFilter.add(username);
@@ -212,6 +213,10 @@ public class UserLoginServiceImpl implements UserLoginService {
         return BeanUtil.convert(requestParam, UserRegisterRespDTO.class);
     }
 
+    /**
+     * 注销用户
+     * @param requestParam 注销用户入参
+     */
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deletion(UserDeletionReqDTO requestParam) {
@@ -221,7 +226,7 @@ public class UserLoginServiceImpl implements UserLoginService {
             throw new ClientException("注销账号与登录账号不一致");
         }
         RLock lock = redissonClient.getLock(USER_DELETION + requestParam.getUsername());
-        // 加锁为什么放在 try 语句外？https://www.yuque.com/magestack/12306/pu52u29i6eb1c5wh
+        // 加锁为什么放在 try 语句外？https://www.yuque.com/magestack/12306/pu52u29i6eb1c5wh (规范)
         lock.lock();
         try {
             UserQueryRespDTO userQueryRespDTO = userService.queryUserByUsername(username);
@@ -234,11 +239,15 @@ public class UserLoginServiceImpl implements UserLoginService {
             userDO.setDeletionTime(System.currentTimeMillis());
             userDO.setUsername(username);
             // MyBatis Plus 不支持修改语句变更 del_flag 字段
+
+            // 注销用户
             userMapper.deletionUser(userDO);
             UserPhoneDO userPhoneDO = UserPhoneDO.builder()
                     .phone(userQueryRespDTO.getPhone())
                     .deletionTime(System.currentTimeMillis())
                     .build();
+
+            // 注销手机号
             userPhoneMapper.deletionUser(userPhoneDO);
             if (StrUtil.isNotBlank(userQueryRespDTO.getMail())) {
                 UserMailDO userMailDO = UserMailDO.builder()
@@ -247,9 +256,13 @@ public class UserLoginServiceImpl implements UserLoginService {
                         .build();
                 userMailMapper.deletionUser(userMailDO);
             }
+
+            // 删除缓存
             distributedCache.delete(UserContext.getToken());
             userReuseMapper.insert(new UserReuseDO(username));
             StringRedisTemplate instance = (StringRedisTemplate) distributedCache.getInstance();
+
+            // redis set 中添加注销用户
             instance.opsForSet().add(USER_REGISTER_REUSE_SHARDING + hashShardingIdx(username), username);
         } finally {
             lock.unlock();

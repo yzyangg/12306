@@ -132,6 +132,8 @@ public class OrderServiceImpl implements OrderService {
                 .username(requestParam.getUsername())
                 .userId(String.valueOf(requestParam.getUserId()))
                 .build();
+
+        // 插入订单表
         orderMapper.insert(orderDO);
         List<TicketOrderItemCreateReqDTO> ticketOrderItems = requestParam.getTicketOrderItems();
         List<OrderItemDO> orderItemDOList = new ArrayList<>();
@@ -163,7 +165,7 @@ public class OrderServiceImpl implements OrderService {
         orderItemService.saveBatch(orderItemDOList);
         orderPassengerRelationService.saveBatch(orderPassengerRelationDOList);
         try {
-            // 发送 RocketMQ 延时消息，指定时间后取消订单
+            // 发送 RocketMQ 延时关闭订单服务消息，指定时间后取消订单
             DelayCloseOrderEvent delayCloseOrderEvent = DelayCloseOrderEvent.builder()
                     .trainId(String.valueOf(requestParam.getTrainId()))
                     .departure(requestParam.getDeparture())
@@ -199,7 +201,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public boolean cancelTickOrder(CancelTicketOrderReqDTO requestParam) {
+        // 获得订单号
         String orderSn = requestParam.getOrderSn();
+
         LambdaQueryWrapper<OrderDO> queryWrapper = Wrappers.lambdaQuery(OrderDO.class)
                 .eq(OrderDO::getOrderSn, orderSn);
         OrderDO orderDO = orderMapper.selectOne(queryWrapper);

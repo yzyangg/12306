@@ -66,6 +66,9 @@ public class TrainTicketQueryParamVerifyChainFilter implements TrainTicketQueryC
         }
         // 验证出发地和目的地是否存在
         StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
+
+
+        // hash结构，key为QUERY_ALL_REGION_LIST，field为出发地或目的地，value为出发地或目的地名称
         HashOperations<String, Object, Object> hashOperations = stringRedisTemplate.opsForHash();
         List<Object> actualExistList = hashOperations.multiGet(
                 QUERY_ALL_REGION_LIST,

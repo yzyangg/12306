@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Bean;
 public class ApplicationBaseAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean // 当容器里没有指定的 Bean 的情况下创建该对象，保证容器中有且只有一个该类型的 Bean
     public ApplicationContextHolder congoApplicationContextHolder() {
         return new ApplicationContextHolder();
     }
