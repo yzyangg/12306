@@ -87,6 +87,7 @@ public final class DelayCloseOrderConsumer implements RocketMQListener<MessageWr
             String trainId = delayCloseOrderEvent.getTrainId();
             String departure = delayCloseOrderEvent.getDeparture();
             String arrival = delayCloseOrderEvent.getArrival();
+            // 列车购票出参
             List<TrainPurchaseTicketRespDTO> trainPurchaseTicketResults = delayCloseOrderEvent.getTrainPurchaseTicketResults();
             try {
                 seatService.unlock(trainId, departure, arrival, trainPurchaseTicketResults);

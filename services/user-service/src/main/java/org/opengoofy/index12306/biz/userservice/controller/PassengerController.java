@@ -29,11 +29,7 @@ import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSce
 import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
 import org.opengoofy.index12306.framework.starter.web.Results;
 import org.opengoofy.index12306.frameworks.starter.user.core.UserContext;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -46,10 +42,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PassengerController {
 
+    /**
+     * 乘车人服务
+     * final 修饰的会被RequiredArgsConstructor注入
+     */
     private final PassengerService passengerService;
 
     /**
-     * 根据用户名查询乘车人列表
+     * 根据用户名查询乘车人列表 (Easy)
      */
     @GetMapping("/api/user-service/passenger/query")
     public Result<List<PassengerRespDTO>> listPassengerQueryByUsername() {

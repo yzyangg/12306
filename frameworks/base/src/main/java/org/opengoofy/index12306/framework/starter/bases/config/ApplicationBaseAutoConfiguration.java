@@ -32,18 +32,34 @@ import org.springframework.context.annotation.Bean;
  */
 public class ApplicationBaseAutoConfiguration {
 
+    /**
+     * 应用上下文持有者
+     *
+     * @return 应用上下文持有者
+     */
     @Bean
     @ConditionalOnMissingBean // 当容器里没有指定的 Bean 的情况下创建该对象，保证容器中有且只有一个该类型的 Bean
     public ApplicationContextHolder congoApplicationContextHolder() {
         return new ApplicationContextHolder();
     }
 
+    /**
+     * 应用上下文后置处理器
+     *
+     * @param applicationContext 应用上下文
+     * @return 应用上下文后置处理器
+     */
     @Bean
     @ConditionalOnMissingBean
     public ApplicationContentPostProcessor congoApplicationContentPostProcessor(ApplicationContext applicationContext) {
         return new ApplicationContentPostProcessor(applicationContext);
     }
 
+    /**
+     * fastjson 安全模式
+     *
+     * @return fastjson 安全模式
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(value = "framework.fastjson.safa-mode", havingValue = "true")

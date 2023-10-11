@@ -68,6 +68,7 @@ public class IdempotentAutoConfiguration {
     }
 
     /**
+     * 申请一个 Token
      * 申请幂等 Token 控制器，基于 RestAPI 场景
      */
     @Bean

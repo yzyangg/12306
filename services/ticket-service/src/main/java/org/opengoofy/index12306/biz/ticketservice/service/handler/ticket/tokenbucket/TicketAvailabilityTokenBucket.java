@@ -55,9 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.opengoofy.index12306.biz.ticketservice.common.constant.Index12306Constant.ADVANCE_TICKET_DAY;
-import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKeyConstant.LOCK_TICKET_AVAILABILITY_TOKEN_BUCKET;
-import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKeyConstant.TICKET_AVAILABILITY_TOKEN_BUCKET;
-import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKeyConstant.TRAIN_INFO;
+import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKeyConstant.*;
 
 /**
  * 列车车票余量令牌桶，应对海量并发场景下满足并行、限流以及防超卖等场景
@@ -82,32 +80,45 @@ public final class TicketAvailabilityTokenBucket {
      * 获取车站间令牌桶中的令牌访问
      * 如果返回 {@link Boolean#TRUE} 代表可以参与接下来的购票下单流程
      * 如果返回 {@link Boolean#FALSE} 代表当前访问出发站点和到达站点令牌已被拿完，无法参与购票下单等逻辑
-     *
+     * {核心 获取列车号，要扣减的座位类型座位数量，站点}
      * @param requestParam 购票请求参数入参
      * @return 是否获取列车车票余量令牌桶中的令牌，{@link Boolean#TRUE} or {@link Boolean#FALSE}
      */
     public boolean takeTokenFromBucket(PurchaseTicketReqDTO requestParam) {
+        // 缓存获取列车信息
         TrainDO trainDO = distributedCache.safeGet(
                 TRAIN_INFO + requestParam.getTrainId(),
                 TrainDO.class,
                 () -> trainMapper.selectById(requestParam.getTrainId()),
                 ADVANCE_TICKET_DAY,
                 TimeUnit.DAYS);
+        // 缓存获取列车车站信息 (起点 -> 终点)
         List<RouteDTO> routeDTOList = trainStationService
                 .listTrainStationRoute(requestParam.getTrainId(), trainDO.getStartStation(), trainDO.getEndStation());
         StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
+        // 缓存获取列车余量令牌桶
         String actualHashKey = TICKET_AVAILABILITY_TOKEN_BUCKET + requestParam.getTrainId();
+        // 判断是否存在列车某个站点到另一个站点的余量令牌桶
         Boolean hasKey = distributedCache.hasKey(actualHashKey);
+
+        //
         if (!hasKey) {
+            // 不存在则加锁，防止并发重复加载
             RLock lock = redissonClient.getLock(String.format(LOCK_TICKET_AVAILABILITY_TOKEN_BUCKET, requestParam.getTrainId()));
             lock.lock();
             try {
+                // 再次判断是否存在列车某个站点到另一个站点的余量令牌桶
                 Boolean hasKeyTwo = distributedCache.hasKey(actualHashKey);
                 if (!hasKeyTwo) {
+                    // 查找TrainType车的座位Type集合
                     List<Integer> seatTypes = VehicleTypeEnum.findSeatTypesByCode(trainDO.getTrainType());
+                    // 余量令牌桶(TrainID -> (起点_终点_座位类型 -> 座位余量))
                     Map<String, String> ticketAvailabilityTokenMap = new HashMap<>();
+
                     for (RouteDTO each : routeDTOList) {
-                        List<SeatTypeCountDTO> seatTypeCountDTOList = seatMapper.listSeatTypeCount(Long.parseLong(requestParam.getTrainId()), each.getStartStation(), each.getEndStation(), seatTypes);
+                        // 根据列车ID、起点、终点、座位类型集合查询余量 (SeatTypeCountDTO -> 座位类型、座位数量)
+                        List<SeatTypeCountDTO> seatTypeCountDTOList = seatMapper
+                                .listSeatTypeCount(Long.parseLong(requestParam.getTrainId()), each.getStartStation(), each.getEndStation(), seatTypes);
                         for (SeatTypeCountDTO eachSeatTypeCountDTO : seatTypeCountDTOList) {
                             String buildCacheKey = StrUtil.join("_", each.getStartStation(), each.getEndStation(), eachSeatTypeCountDTO.getSeatType());
                             ticketAvailabilityTokenMap.put(buildCacheKey, String.valueOf(eachSeatTypeCountDTO.getSeatCount()));
@@ -119,15 +130,22 @@ public final class TicketAvailabilityTokenBucket {
                 lock.unlock();
             }
         }
+        // 获得单例lua脚本
         DefaultRedisScript<Long> actual = Singleton.get(LUA_TICKET_AVAILABILITY_TOKEN_BUCKET_PATH, () -> {
             DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+            // 设置脚本源
             redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(LUA_TICKET_AVAILABILITY_TOKEN_BUCKET_PATH)));
+            // 设置返回类型
             redisScript.setResultType(Long.class);
             return redisScript;
         });
         Assert.notNull(actual);
-        Map<Integer, Long> seatTypeCountMap = requestParam.getPassengers().stream()
+        // 根据座位类型分组统计乘客数量
+        Map<Integer, Long> seatTypeCountMap = requestParam
+                .getPassengers().stream()
                 .collect(Collectors.groupingBy(PurchaseTicketPassengerDetailDTO::getSeatType, Collectors.counting()));
+
+        // 根据座位类型分组统计乘客数量 (转换成Json数组)
         JSONArray seatTypeCountArray = seatTypeCountMap.entrySet().stream()
                 .map(entry -> {
                     JSONObject jsonObject = new JSONObject();
@@ -136,10 +154,21 @@ public final class TicketAvailabilityTokenBucket {
                     return jsonObject;
                 })
                 .collect(Collectors.toCollection(JSONArray::new));
+        // 缓存获取列车车站信息 (起点 -> 终点)
         List<RouteDTO> takeoutRouteDTOList = trainStationService
                 .listTakeoutTrainStationRoute(requestParam.getTrainId(), requestParam.getDeparture(), requestParam.getArrival());
+        // lua脚本key (出发站点_到达站点)
         String luaScriptKey = StrUtil.join("_", requestParam.getDeparture(), requestParam.getArrival());
-        Long result = stringRedisTemplate.execute(actual, Lists.newArrayList(actualHashKey, luaScriptKey), JSON.toJSONString(seatTypeCountArray), JSON.toJSONString(takeoutRouteDTOList));
+        // 执行lua脚本
+        Long result = stringRedisTemplate.execute(
+                actual,
+                //TICKET_AVAILABILITY_TOKEN_BUCKET + requestParam.getTrainId()
+                //String luaScriptKey = StrUtil.join("_", requestParam.getDeparture(), requestParam.getArrival());
+                Lists.newArrayList(actualHashKey, luaScriptKey),
+                JSON.toJSONString(seatTypeCountArray),
+                JSON.toJSONString(takeoutRouteDTOList));
+
+        // 0 就是OK啦
         return result != null && Objects.equals(result, 0L);
     }
 

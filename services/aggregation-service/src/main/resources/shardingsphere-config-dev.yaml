@@ -8,64 +8,66 @@ dataSources:
 rules:
   - !SHARDING
     tables:
-      t_user:
+      t_user: # 用户表
         actualDataNodes: ds_0.t_user_${0..15}
         tableStrategy:
           standard:
             shardingColumn: username
             shardingAlgorithmName: user_hash_mod
-      t_passenger:
+      t_passenger: # 乘客表
         actualDataNodes: ds_0.t_passenger_${0..15}
         tableStrategy:
           standard:
             shardingColumn: username
             shardingAlgorithmName: passenger_table_hash_mod
-      t_order:
+      t_order: # 订单表
         actualDataNodes: ds_0.t_order_${0..15}
         tableStrategy:
           complex:
             shardingColumns: user_id,order_sn
             shardingAlgorithmName: order_table_complex_mod
-      t_order_item:
+      t_order_item: # 订单项表
         actualDataNodes: ds_0.t_order_item_${0..15}
         tableStrategy:
           complex:
             shardingColumns: user_id,order_sn
             shardingAlgorithmName: order_item_table_complex_mod
-      t_pay:
+      t_pay: # 支付表
         actualDataNodes: ds_0.t_pay_${0..15}
         tableStrategy:
           complex:
             shardingColumns: order_sn,pay_sn
             shardingAlgorithmName: pay_table_complex_mod
-      t_order_item_passenger:
+      t_order_item_passenger: # 订单项乘客关联表
         actualDataNodes: ds_0.t_order_item_passenger_${0..15}
         tableStrategy:
           standard:
             shardingColumn: id_card
             shardingAlgorithmName: order_passenger_relation_table_mod
-      t_user_mail:
+      t_user_mail: # 用户邮箱表
         actualDataNodes: ds_0.t_user_mail_${0..15}
         tableStrategy:
           standard:
             shardingColumn: mail
             shardingAlgorithmName: t_user_mail_table_mod
-      t_user_phone:
+      t_user_phone: # 用户手机表
         actualDataNodes: ds_0.t_user_phone_${0..15}
         tableStrategy:
           standard:
             shardingColumn: phone
             shardingAlgorithmName: t_user_phone_table_mod
-    shardingAlgorithms:
-      user_hash_mod:
+
+
+    shardingAlgorithms: # 分表算法
+      user_hash_mod: # 用户表分表算法
         type: HASH_MOD
         props:
           sharding-count: 16
-      passenger_table_hash_mod:
+      passenger_table_hash_mod: # 乘客表分表算法
         type: HASH_MOD
         props:
           sharding-count: 16
-      order_table_complex_mod:
+      order_table_complex_mod: # 订单表分表算法
         type: CLASS_BASED
         props:
           algorithmClassName: org.opengoofy.index12306.biz.orderservice.dao.algorithm.OrderCommonTableComplexAlgorithm

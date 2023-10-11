@@ -67,8 +67,7 @@ public class RegionTrainStationJobHandler extends IJobHandler {
     public void execute() {
         List<String> regionList = regionMapper.selectList(Wrappers.emptyWrapper())
                 .stream()
-                .map(RegionDO::getName)
-                .collect(Collectors.toList());
+                .map(RegionDO::getName).toList();
         String requestParam = getJobRequestParam();
         var dateTime = StrUtil.isNotBlank(requestParam) ? requestParam : DateUtil.tomorrow().toDateStr();
         for (int i = 0; i < regionList.size(); i++) {

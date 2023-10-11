@@ -91,6 +91,9 @@ public class UserLoginServiceImpl implements UserLoginService {
             }
         }
         String username;
+
+
+        // 先通过路由表查到用户名
         if (mailFlag) {
             LambdaQueryWrapper<UserMailDO> queryWrapper = Wrappers.lambdaQuery(UserMailDO.class)
                     .eq(UserMailDO::getMail, usernameOrMailOrPhone);
@@ -104,11 +107,19 @@ public class UserLoginServiceImpl implements UserLoginService {
                     .map(UserPhoneDO::getUsername)
                     .orElse(null);
         }
+
+
+        // 通过路由表找不到，再通过requestParam查到用户信息
         username = Optional.ofNullable(username).orElse(requestParam.getUsernameOrMailOrPhone());
+
+
+        // 通过用户名和密码查到用户信息
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
                 .eq(UserDO::getUsername, username)
                 .eq(UserDO::getPassword, requestParam.getPassword())
                 .select(UserDO::getId, UserDO::getUsername, UserDO::getRealName);
+
+
         UserDO userDO = userMapper.selectOne(queryWrapper);
         if (userDO != null) {
             UserInfoDTO userInfo = UserInfoDTO.builder()
@@ -136,6 +147,11 @@ public class UserLoginServiceImpl implements UserLoginService {
         }
     }
 
+    /**
+     * 用户名是否存在
+     * @param username 用户名
+     * @return 用户名是否存在返回结果
+     */
     @Override
     public Boolean hasUsername(String username) {
         boolean hasUsername = userRegisterCachePenetrationBloomFilter.contains(username);
@@ -234,6 +250,7 @@ public class UserLoginServiceImpl implements UserLoginService {
                     .idType(userQueryRespDTO.getIdType())
                     .idCard(userQueryRespDTO.getIdCard())
                     .build();
+            // 操作注销表
             userDeletionMapper.insert(userDeletionDO);
             UserDO userDO = new UserDO();
             userDO.setDeletionTime(System.currentTimeMillis());

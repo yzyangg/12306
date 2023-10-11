@@ -31,11 +31,7 @@ import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSce
 import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
 import org.opengoofy.index12306.framework.starter.log.annotation.ILog;
 import org.opengoofy.index12306.framework.starter.web.Results;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 车票控制层
@@ -58,6 +54,7 @@ public class TicketController {
 
     /**
      * 购买车票
+     * {幂等接口}
      */
     @ILog
     @Idempotent(
@@ -76,6 +73,7 @@ public class TicketController {
 
     /**
      * 购买车票v2
+     * {幂等接口}
      */
     @ILog
     @Idempotent(

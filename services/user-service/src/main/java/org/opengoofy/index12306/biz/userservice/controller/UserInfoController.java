@@ -50,7 +50,7 @@ public class UserInfoController {
     private final UserService userService;
 
     /**
-     * 根据用户名查询用户信息
+     * 根据用户名查询用户信息 (Easy)
      */
     @GetMapping("/api/user-service/query")
     public Result<UserQueryRespDTO> queryUserByUsername(@RequestParam("username") @NotEmpty String username) {
@@ -58,7 +58,7 @@ public class UserInfoController {
     }
 
     /**
-     * 检查用户名是否已存在
+     * 检查用户名是否已存在 (Easy)
      */
     @GetMapping("/api/user-service/has-username")
     public Result<Boolean> hasUsername(@RequestParam("username") @NotEmpty String username) {
@@ -66,7 +66,7 @@ public class UserInfoController {
     }
 
     /**
-     * 注册用户
+     * 注册用户 (Hard)
      */
     @PostMapping("/api/user-service/register")
     public Result<UserRegisterRespDTO> register(@RequestBody @Valid UserRegisterReqDTO requestParam) {
@@ -74,7 +74,7 @@ public class UserInfoController {
     }
 
     /**
-     * 修改用户
+     * 修改用户 (Easy)
      */
     @PostMapping("/api/user-service/update")
     public Result<Void> update(@RequestBody @Valid UserUpdateReqDTO requestParam) {
@@ -83,7 +83,7 @@ public class UserInfoController {
     }
 
     /**
-     * 注销用户
+     * 注销用户 (Hard)
      */
     @PostMapping("/api/user-service/deletion")
     public Result<Void> deletion(@RequestBody @Valid UserDeletionReqDTO requestParam) {

@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 /**
  * 抽象责任链上下文
+ * CommandLineRunner: Spring容器启动后执行
+ *
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
@@ -38,7 +40,7 @@ public final class AbstractChainContext<T> implements CommandLineRunner {
     private final Map<String, List<AbstractChainHandler>> abstractChainHandlerContainer = new HashMap<>();
 
     /**
-     * 责任链组件执行
+     * 根据责任链组件标识获取责任链组件集合，然后执行责任链组件集合中的责任链组件
      *
      * @param mark         责任链组件标识
      * @param requestParam 请求参数
@@ -53,20 +55,27 @@ public final class AbstractChainContext<T> implements CommandLineRunner {
 
     /**
      * 容器初始化时执行
+     * 将所有的 AbstractChainHandler 组件放入责任链组件容器中
      *
      * @param args
      * @throws Exception
      */
     @Override
     public void run(String... args) throws Exception {
+        // 从 Spring 容器中获取所有的 AbstractChainHandler 组件
         Map<String, AbstractChainHandler> chainFilterMap = ApplicationContextHolder
                 .getBeansOfType(AbstractChainHandler.class);
+
         chainFilterMap.forEach((beanName, bean) -> {
+            // 根据责任链组件标识获取责任链组件集合
             List<AbstractChainHandler> abstractChainHandlers = abstractChainHandlerContainer.get(bean.mark());
+            // 如果责任链组件集合为空，则初始化责任链组件集合
             if (CollectionUtils.isEmpty(abstractChainHandlers)) {
                 abstractChainHandlers = new ArrayList();
             }
+            // 将责任链组件添加到责任链组件集合中
             abstractChainHandlers.add(bean);
+            // 将责任链组件集合放入责任链组件容器中
             List<AbstractChainHandler> actualAbstractChainHandlers = abstractChainHandlers.stream()
                     .sorted(Comparator.comparing(Ordered::getOrder))
                     .collect(Collectors.toList());

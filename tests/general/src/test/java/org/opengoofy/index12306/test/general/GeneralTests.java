@@ -17,6 +17,7 @@
 
 package org.opengoofy.index12306.test.general;
 
+import cn.hutool.core.util.DesensitizedUtil;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -52,5 +53,12 @@ public final class GeneralTests {
         for (int i = 0; i < shardMacNum; i++) {
             System.out.println(String.format(USER_INFO_CREATE_TABLE_SQL, i));
         }
+    }
+
+    @Test
+    void testHutoolCoreUtil() {
+        String idCard = "123456789012345678";
+        String idCardDesensitization = DesensitizedUtil.idCardNum(idCard, 4, 4);
+        System.out.println(idCardDesensitization);
     }
 }

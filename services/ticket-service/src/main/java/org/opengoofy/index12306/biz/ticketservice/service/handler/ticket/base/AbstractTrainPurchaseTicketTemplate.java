@@ -37,13 +37,23 @@ import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKe
 
 /**
  * 抽象高铁购票模板基础服务
+ * CommandLineRunner 通常用于在 Spring Boot 应用程序启动后执行一些初始化操作
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
 public abstract class AbstractTrainPurchaseTicketTemplate implements IPurchaseTicket, CommandLineRunner, AbstractExecuteStrategy<SelectSeatDTO, List<TrainPurchaseTicketRespDTO>> {
 
+    /**
+     * 分布式缓存
+     */
     private DistributedCache distributedCache;
+    /**
+     * 缓存更新类型
+     */
     private String ticketAvailabilityCacheUpdateType;
+    /**
+     * 火车站点服务
+     */
     private TrainStationService trainStationService;
 
     /**

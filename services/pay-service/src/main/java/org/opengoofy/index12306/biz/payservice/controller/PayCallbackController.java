@@ -49,6 +49,7 @@ public class PayCallbackController {
     /**
      * 支付宝回调
      * 调用支付宝支付后，支付宝会调用此接口发送支付结果
+     * 地址就是配置文件中的回调地址
      */
     @PostMapping("/api/pay-service/callback/alipay")
     public void callbackAlipay(@RequestParam Map<String, Object> requestParam) {
