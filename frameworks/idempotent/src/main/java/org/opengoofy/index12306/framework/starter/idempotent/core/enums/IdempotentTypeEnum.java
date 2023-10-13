@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.opengoofy.index12306.framework.starter.idempotent.enums;
+package org.opengoofy.index12306.framework.starter.idempotent.core.enums;
 
 /**
  * 幂等验证类型枚举

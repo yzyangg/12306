@@ -49,10 +49,15 @@ public abstract class AbstractWorkIdChooseTemplate {
     public void chooseAndInit() {
         // 模板方法模式: 通过抽象方法获取 WorkId 包装器创建雪花算法
         WorkIdWrapper workIdWrapper = chooseWorkId();
+        // 机器 ID
         long workId = workIdWrapper.getWorkId();
+        // 数据中心 ID
         long dataCenterId = workIdWrapper.getDataCenterId();
+        // 初始化雪花算法
         Snowflake snowflake = new Snowflake(workId, dataCenterId, isUseSystemClock);
         log.info("Snowflake type: {}, workId: {}, dataCenterId: {}", this.getClass().getSimpleName(), workId, dataCenterId);
+
+        // 初始化雪花算法
         SnowflakeIdUtil.initSnowflake(snowflake);
     }
 }

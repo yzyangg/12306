@@ -26,16 +26,14 @@ import org.opengoofy.index12306.biz.orderservice.common.enums.OrderItemStatusEnu
 import org.opengoofy.index12306.biz.orderservice.common.enums.OrderStatusEnum;
 import org.opengoofy.index12306.biz.orderservice.dao.entity.OrderItemDO;
 import org.opengoofy.index12306.biz.orderservice.dto.domain.OrderItemStatusReversalDTO;
-import org.opengoofy.index12306.biz.orderservice.dto.domain.OrderStatusReversalDTO;
 import org.opengoofy.index12306.biz.orderservice.dto.resp.TicketOrderPassengerDetailRespDTO;
 import org.opengoofy.index12306.biz.orderservice.mq.domain.MessageWrapper;
 import org.opengoofy.index12306.biz.orderservice.mq.event.RefundResultCallbackOrderEvent;
 import org.opengoofy.index12306.biz.orderservice.service.OrderItemService;
-import org.opengoofy.index12306.biz.orderservice.service.OrderService;
 import org.opengoofy.index12306.framework.starter.common.toolkit.BeanUtil;
 import org.opengoofy.index12306.framework.starter.idempotent.annotation.Idempotent;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSceneEnum;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentSceneEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentTypeEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

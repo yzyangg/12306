@@ -36,7 +36,7 @@ public abstract class AbstractIdempotentExecuteHandler implements IdempotentExec
     protected abstract IdempotentParamWrapper buildWrapper(ProceedingJoinPoint joinPoint);
 
     /**
-     * 执行幂等处理逻辑
+     * 执行幂等处理逻辑 （子类只需实现具体的handler，调用方法已经定死）
      *
      * @param joinPoint  AOP 方法处理
      * @param idempotent 幂等注解

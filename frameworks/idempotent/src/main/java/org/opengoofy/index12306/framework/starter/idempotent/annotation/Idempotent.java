@@ -17,8 +17,8 @@
 
 package org.opengoofy.index12306.framework.starter.idempotent.annotation;
 
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSceneEnum;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentSceneEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentTypeEnum;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.opengoofy.index12306.framework.starter.idempotent.annotation.Idempotent;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentTypeEnum;
 
 /**
  * 幂等参数包装

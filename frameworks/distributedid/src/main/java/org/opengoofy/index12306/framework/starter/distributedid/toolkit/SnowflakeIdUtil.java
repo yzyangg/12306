@@ -29,7 +29,7 @@ import org.opengoofy.index12306.framework.starter.distributedid.handler.IdGenera
 public final class SnowflakeIdUtil {
 
     /**
-     * 雪花算法对象
+     * 雪花算法对象 {@link Snowflake} 等待被初始化
      */
     private static Snowflake SNOWFLAKE;
 

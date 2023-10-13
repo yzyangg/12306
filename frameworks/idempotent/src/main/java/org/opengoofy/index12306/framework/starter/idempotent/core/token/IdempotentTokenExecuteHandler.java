@@ -36,6 +36,7 @@ import java.util.UUID;
 
 /**
  * 基于 Token 验证请求幂等性, 通常应用于 RestAPI 方法
+ * Token代表第一次的请求
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
@@ -56,7 +57,9 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentExecu
 
     @Override
     public String createToken() {
-        String token = Optional.ofNullable(Strings.emptyToNull(idempotentProperties.getPrefix())).orElse(TOKEN_PREFIX_KEY) + UUID.randomUUID();
+        String token = Optional
+                .ofNullable(Strings.emptyToNull(idempotentProperties.getPrefix())).orElse(TOKEN_PREFIX_KEY) + UUID.randomUUID();
+        // 存放token
         distributedCache.put(token, "", Optional.ofNullable(idempotentProperties.getTimeout()).orElse(TOKEN_EXPIRED_TIME));
         return token;
     }
@@ -64,14 +67,18 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentExecu
     @Override
     public void handler(IdempotentParamWrapper wrapper) {
         HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
+        // 获取token
         String token = request.getHeader(TOKEN_KEY);
         if (StrUtil.isBlank(token)) {
             token = request.getParameter(TOKEN_KEY);
             if (StrUtil.isBlank(token)) {
+                // token 为空，抛出异常
                 throw new ClientException(BaseErrorCode.IDEMPOTENT_TOKEN_NULL_ERROR);
             }
         }
+        // 删除token，标记为已经消费
         Boolean tokenDelFlag = distributedCache.delete(token);
+        // 删除失败
         if (!tokenDelFlag) {
             String errMsg = StrUtil.isNotBlank(wrapper.getIdempotent().message())
                     ? wrapper.getIdempotent().message()

@@ -22,8 +22,8 @@ import org.opengoofy.index12306.framework.starter.idempotent.core.param.Idempote
 import org.opengoofy.index12306.framework.starter.idempotent.core.spel.IdempotentSpELByMQExecuteHandler;
 import org.opengoofy.index12306.framework.starter.idempotent.core.spel.IdempotentSpELByRestAPIExecuteHandler;
 import org.opengoofy.index12306.framework.starter.idempotent.core.token.IdempotentTokenService;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSceneEnum;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentSceneEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentTypeEnum;
 
 /**
  * 幂等执行处理器工厂

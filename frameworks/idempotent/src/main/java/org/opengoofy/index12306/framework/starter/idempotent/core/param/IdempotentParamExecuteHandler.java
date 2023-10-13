@@ -64,6 +64,7 @@ public final class IdempotentParamExecuteHandler extends AbstractIdempotentExecu
     }
 
     /**
+     * 获得当前方法参数
      * @return joinPoint md5
      */
     private String calcArgsMD5(ProceedingJoinPoint joinPoint) {

@@ -29,8 +29,8 @@ import org.opengoofy.index12306.biz.orderservice.mq.domain.MessageWrapper;
 import org.opengoofy.index12306.biz.orderservice.mq.event.PayResultCallbackOrderEvent;
 import org.opengoofy.index12306.biz.orderservice.service.OrderService;
 import org.opengoofy.index12306.framework.starter.idempotent.annotation.Idempotent;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentSceneEnum;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentTypeEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentSceneEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentTypeEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

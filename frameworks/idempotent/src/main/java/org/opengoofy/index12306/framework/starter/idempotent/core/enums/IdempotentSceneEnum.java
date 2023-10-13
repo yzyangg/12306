@@ -15,41 +15,22 @@
  * limitations under the License.
  */
 
-package org.opengoofy.index12306.framework.starter.idempotent.enums;
-
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-import java.util.Objects;
+package org.opengoofy.index12306.framework.starter.idempotent.core.enums;
 
 /**
- * 幂等 MQ 消费状态枚举
+ * 幂等验证场景枚举
  *
  * @公众号：马丁玩编程，回复：加群，添加马哥微信（备注：12306）获取项目资料
  */
-@RequiredArgsConstructor
-public enum IdempotentMQConsumeStatusEnum {
+public enum IdempotentSceneEnum {
     
     /**
-     * 消费中
+     * 基于 RestAPI 场景验证
      */
-    CONSUMING("0"),
+    RESTAPI,
     
     /**
-     * 已消费
+     * 基于 MQ 场景验证
      */
-    CONSUMED("1");
-    
-    @Getter
-    private final String code;
-    
-    /**
-     * 如果消费状态等于消费中，返回失败
-     *
-     * @param consumeStatus 消费状态
-     * @return 是否消费失败
-     */
-    public static boolean isError(String consumeStatus) {
-        return Objects.equals(CONSUMING.code, consumeStatus);
-    }
+    MQ
 }

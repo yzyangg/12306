@@ -28,7 +28,7 @@ import org.opengoofy.index12306.framework.starter.idempotent.core.IdempotentAspe
 import org.opengoofy.index12306.framework.starter.idempotent.core.IdempotentContext;
 import org.opengoofy.index12306.framework.starter.idempotent.core.IdempotentParamWrapper;
 import org.opengoofy.index12306.framework.starter.idempotent.core.RepeatConsumptionException;
-import org.opengoofy.index12306.framework.starter.idempotent.enums.IdempotentMQConsumeStatusEnum;
+import org.opengoofy.index12306.framework.starter.idempotent.core.enums.IdempotentMQConsumeStatusEnum;
 import org.opengoofy.index12306.framework.starter.idempotent.toolkit.LogUtil;
 import org.opengoofy.index12306.framework.starter.idempotent.toolkit.SpELUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;

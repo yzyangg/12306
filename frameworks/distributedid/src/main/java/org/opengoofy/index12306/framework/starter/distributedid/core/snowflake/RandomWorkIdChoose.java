@@ -40,7 +40,6 @@ public class RandomWorkIdChoose extends AbstractWorkIdChooseTemplate implements 
     }
 
     private static long getRandom(int start, int end) {
-        long random = (long) (Math.random() * (end - start + 1) + start);
-        return random;
+        return (long) (Math.random() * (end - start + 1) + start);
     }
 }
