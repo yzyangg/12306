@@ -40,7 +40,10 @@ public final class SurplusNeedMatchSeatUtil {
      * @return 获取选择座位数量的空余座位集合 (获取数量可能小于选择座位数量)
      */
     public static List<Pair<Integer, Integer>> getSurplusNeedMatchSeat(int chooseSeatSize, PriorityQueue<List<Pair<Integer, Integer>>> vacantSeatQueue) {
-        Optional<List<Pair<Integer, Integer>>> optionalList = vacantSeatQueue.parallelStream().filter(each -> each.size() >= chooseSeatSize).findFirst();
+        Optional<List<Pair<Integer, Integer>>> optionalList = vacantSeatQueue
+                .parallelStream()
+                .filter(each -> each.size() >= chooseSeatSize)
+                .findFirst();
         if (optionalList.isPresent()) {
             return optionalList.get().subList(0, chooseSeatSize);
         }

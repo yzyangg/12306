@@ -45,7 +45,7 @@ public class EnvironmentUtil {
     public static boolean isDevEnvironment() {
         ConfigurableEnvironment configurableEnvironment = ApplicationContextHolder.getBean(ConfigurableEnvironment.class);
         String propertyActive = configurableEnvironment.getProperty("spring.profiles.active", "dev");
-        return ENVIRONMENT_LIST.stream().filter(each -> propertyActive.contains(each)).findFirst().isPresent();
+        return ENVIRONMENT_LIST.stream().anyMatch(propertyActive::contains);
     }
 
     /**
@@ -56,6 +56,6 @@ public class EnvironmentUtil {
     public static boolean isProdEnvironment() {
         ConfigurableEnvironment configurableEnvironment = ApplicationContextHolder.getBean(ConfigurableEnvironment.class);
         String propertyActive = configurableEnvironment.getProperty("spring.profiles.active", "dev");
-        return !ENVIRONMENT_LIST.stream().filter(each -> propertyActive.contains(each)).findFirst().isPresent();
+        return ENVIRONMENT_LIST.stream().noneMatch(propertyActive::contains);
     }
 }

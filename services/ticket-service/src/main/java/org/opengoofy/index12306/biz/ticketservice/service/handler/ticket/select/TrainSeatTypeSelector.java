@@ -65,11 +65,23 @@ public final class TrainSeatTypeSelector {
     private final AbstractStrategyChoose abstractStrategyChoose;
     private final ThreadPoolExecutor selectSeatThreadPoolExecutor;
 
+
+    /**
+     * 选择位置
+     *
+     * @param trainType
+     * @param requestParam
+     * @return
+     */
     public List<TrainPurchaseTicketRespDTO> select(Integer trainType, PurchaseTicketReqDTO requestParam) {
         List<PurchaseTicketPassengerDetailDTO> passengerDetails = requestParam.getPassengers();
+
         Map<Integer, List<PurchaseTicketPassengerDetailDTO>> seatTypeMap = passengerDetails.stream()
                 .collect(Collectors.groupingBy(PurchaseTicketPassengerDetailDTO::getSeatType));
+
         List<TrainPurchaseTicketRespDTO> actualResult = new CopyOnWriteArrayList<>();
+
+        // 座位类型种类大于1才加锁
         if (seatTypeMap.size() > 1) {
             List<Future<List<TrainPurchaseTicketRespDTO>>> futureResults = new ArrayList<>();
             seatTypeMap.forEach((seatType, passengerSeatDetails) -> {
@@ -81,17 +93,23 @@ public final class TrainSeatTypeSelector {
             // 并行流极端情况下有坑，详情参考：https://t.zsxq.com/11X4LkYJs
             futureResults.parallelStream().forEach(completableFuture -> {
                 try {
+                    // 等待所有任务执行完成
                     actualResult.addAll(completableFuture.get());
                 } catch (Exception e) {
                     throw new ServiceException("站点余票不足，请尝试更换座位类型或选择其它站点");
                 }
             });
+
+            // 不加锁 直接选座
         } else {
             seatTypeMap.forEach((seatType, passengerSeatDetails) -> {
-                List<TrainPurchaseTicketRespDTO> aggregationResult = distributeSeats(trainType, seatType, requestParam, passengerSeatDetails);
+                List<TrainPurchaseTicketRespDTO> aggregationResult =
+                        distributeSeats(trainType, seatType, requestParam, passengerSeatDetails);
                 actualResult.addAll(aggregationResult);
             });
         }
+
+        // 选不了座位时
         if (CollUtil.isEmpty(actualResult) || !Objects.equals(actualResult.size(), passengerDetails.size())) {
             throw new ServiceException("站点余票不足，请尝试更换座位类型或选择其它站点");
         }
@@ -101,6 +119,7 @@ public final class TrainSeatTypeSelector {
         Result<List<PassengerRespDTO>> passengerRemoteResult;
         List<PassengerRespDTO> passengerRemoteResultList;
         try {
+            // 调用远程服务查询
             passengerRemoteResult = userRemoteService.listPassengerQueryByIds(UserContext.getUsername(), passengerIds);
             if (!passengerRemoteResult.isSuccess() || CollUtil.isEmpty(passengerRemoteResultList = passengerRemoteResult.getData())) {
                 throw new RemoteException("用户服务远程调用查询乘车人相信信息错误");
@@ -139,7 +158,8 @@ public final class TrainSeatTypeSelector {
     }
 
     private List<TrainPurchaseTicketRespDTO> distributeSeats(Integer trainType, Integer seatType, PurchaseTicketReqDTO requestParam, List<PurchaseTicketPassengerDetailDTO> passengerSeatDetails) {
-        String buildStrategyKey = VehicleTypeEnum.findNameByCode(trainType) + VehicleSeatTypeEnum.findNameByCode(seatType);
+        String buildStrategyKey =
+                VehicleTypeEnum.findNameByCode(trainType) + VehicleSeatTypeEnum.findNameByCode(seatType);
         SelectSeatDTO selectSeatDTO = SelectSeatDTO.builder()
                 .seatType(seatType)
                 .passengerSeatDetails(passengerSeatDetails)

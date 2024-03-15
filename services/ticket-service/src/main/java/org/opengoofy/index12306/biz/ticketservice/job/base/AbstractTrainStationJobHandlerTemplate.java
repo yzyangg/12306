@@ -59,6 +59,8 @@ public abstract class AbstractTrainStationJobHandlerTemplate extends IJobHandler
             var queryWrapper = Wrappers.lambdaQuery(TrainDO.class)
                     .between(TrainDO::getDepartureTime, DateUtil.beginOfDay(dateTime), DateUtil.endOfDay(dateTime));
             var trainDOPage = trainMapper.selectPage(new Page<>(currentPage, size), queryWrapper);
+
+            // 停止条件
             if (trainDOPage == null || CollUtil.isEmpty(trainDOPage.getRecords())) {
                 break;
             }

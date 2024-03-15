@@ -43,7 +43,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.opengoofy.index12306.biz.ticketservice.common.constant.Index12306Constant.ADVANCE_TICKET_DAY;
 import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKeyConstant.REGION_TRAIN_STATION;
@@ -57,24 +56,34 @@ import static org.opengoofy.index12306.biz.ticketservice.common.constant.RedisKe
 @RequiredArgsConstructor
 public class RegionTrainStationJobHandler extends IJobHandler {
 
+    // 注入依赖项
     private final RegionMapper regionMapper;
     private final TrainStationRelationMapper trainStationRelationMapper;
     private final DistributedCache distributedCache;
 
+    // 使用XxlJob定义任务
     @XxlJob(value = "regionTrainStationJobHandler")
     @GetMapping("/api/ticket-service/region-train-station/job/cache-init/execute")
     @Override
     public void execute() {
+        // 步骤1：获取地区列表
         List<String> regionList = regionMapper.selectList(Wrappers.emptyWrapper())
                 .stream()
-                .map(RegionDO::getName).toList();
+                .map(RegionDO::getName)
+                .toList();
+
+        // 步骤2：获取任务请求参数
         String requestParam = getJobRequestParam();
         var dateTime = StrUtil.isNotBlank(requestParam) ? requestParam : DateUtil.tomorrow().toDateStr();
+
+        // 步骤3：遍历地区对
         for (int i = 0; i < regionList.size(); i++) {
             for (int j = 0; j < regionList.size(); j++) {
                 if (i != j) {
                     String startRegion = regionList.get(i);
                     String endRegion = regionList.get(j);
+
+                    // 步骤4：查询火车站关系
                     LambdaQueryWrapper<TrainStationRelationDO> relationQueryWrapper = Wrappers.lambdaQuery(TrainStationRelationDO.class)
                             .eq(TrainStationRelationDO::getStartRegion, startRegion)
                             .eq(TrainStationRelationDO::getEndRegion, endRegion);
@@ -82,12 +91,16 @@ public class RegionTrainStationJobHandler extends IJobHandler {
                     if (CollUtil.isEmpty(trainStationRelationDOList)) {
                         continue;
                     }
+
+                    // 步骤5：准备缓存数据
                     Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
                     for (TrainStationRelationDO item : trainStationRelationDOList) {
                         String zSetKey = StrUtil.join("_", item.getTrainId(), item.getDeparture(), item.getArrival());
                         ZSetOperations.TypedTuple<String> tuple = ZSetOperations.TypedTuple.of(zSetKey, Double.valueOf(item.getDepartureTime().getTime()));
                         tuples.add(tuple);
                     }
+
+                    // 步骤6：访问Redis缓存并添加数据
                     StringRedisTemplate stringRedisTemplate = (StringRedisTemplate) distributedCache.getInstance();
                     String buildCacheKey = REGION_TRAIN_STATION + StrUtil.join("_", startRegion, endRegion, dateTime);
                     stringRedisTemplate.opsForZSet().add(buildCacheKey, tuples);
@@ -97,6 +110,7 @@ public class RegionTrainStationJobHandler extends IJobHandler {
         }
     }
 
+    // 获取任务请求参数
     private String getJobRequestParam() {
         return EnvironmentUtil.isDevEnvironment()
                 ? ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("requestParam")

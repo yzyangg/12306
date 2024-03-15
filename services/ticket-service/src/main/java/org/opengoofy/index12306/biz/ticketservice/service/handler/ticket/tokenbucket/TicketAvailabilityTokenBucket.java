@@ -81,6 +81,7 @@ public final class TicketAvailabilityTokenBucket {
      * 如果返回 {@link Boolean#TRUE} 代表可以参与接下来的购票下单流程
      * 如果返回 {@link Boolean#FALSE} 代表当前访问出发站点和到达站点令牌已被拿完，无法参与购票下单等逻辑
      * {核心 获取列车号，要扣减的座位类型座位数量，站点}
+     *
      * @param requestParam 购票请求参数入参
      * @return 是否获取列车车票余量令牌桶中的令牌，{@link Boolean#TRUE} or {@link Boolean#FALSE}
      */
@@ -101,7 +102,7 @@ public final class TicketAvailabilityTokenBucket {
         // 判断是否存在列车某个站点到另一个站点的余量令牌桶
         Boolean hasKey = distributedCache.hasKey(actualHashKey);
 
-        //
+        // 缓存重建
         if (!hasKey) {
             // 不存在则加锁，防止并发重复加载
             RLock lock = redissonClient.getLock(String.format(LOCK_TICKET_AVAILABILITY_TOKEN_BUCKET, requestParam.getTrainId()));

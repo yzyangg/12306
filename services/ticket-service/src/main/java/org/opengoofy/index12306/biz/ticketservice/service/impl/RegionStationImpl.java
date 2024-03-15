@@ -66,7 +66,9 @@ public class RegionStationImpl implements RegionStationService {
     @Override
     public List<RegionStationQueryRespDTO> listRegionStation(RegionStationQueryReqDTO requestParam) {
         String key;
+        // 根据名称查询
         if (StrUtil.isNotBlank(requestParam.getName())) {
+            // key = "index12306-ticket-service:region-station:";
             key = REGION_STATION + requestParam.getName();
             return safeGetRegionStation(
                     key,
@@ -82,7 +84,8 @@ public class RegionStationImpl implements RegionStationService {
             );
         }
         key = REGION_STATION + requestParam.getQueryType();
-        LambdaQueryWrapper<RegionDO> queryWrapper = switch (requestParam.getQueryType()) {
+        LambdaQueryWrapper<RegionDO> queryWrapper =
+                switch (requestParam.getQueryType()) {
             case 0 -> Wrappers.lambdaQuery(RegionDO.class)
                     .eq(RegionDO::getPopularFlag, FlagEnum.TRUE.code());
             case 1 -> Wrappers.lambdaQuery(RegionDO.class)
